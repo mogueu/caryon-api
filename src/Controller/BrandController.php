@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Brand;
 use App\Entity\Product;
@@ -48,6 +49,19 @@ class BrandController extends AbstractController
         $jsonBrand = $serializer->serialize($brand, 'json', ['groups' => 'getBrands']);
 
         return new JsonResponse($jsonBrand, Response::HTTP_CREATED, [], true);
+    }
+
+    //update a brand with specific information front the request
+    #[Route('/api/brands/{id}', name: 'app_brand_edit', methods:['put'])]
+    public function editBrand(Brand $currentBrand, Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    {
+        $brand = $serializer->deserialize($request->getContent(), brand::class, 'json', [AbstractNormalize::OBJECT_TO_POPULATE => $currentBrand]);
+
+        $em->persist($brand);
+        $em->flush();
+
+        //$jsonBrand = $serializer->serialize($brand, 'json', ['groups' => 'getBrands']);
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
     //delete an existing brand from the database

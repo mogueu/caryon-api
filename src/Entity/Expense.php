@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\ExpenseRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ExpenseRepository::class)]
 class Expense

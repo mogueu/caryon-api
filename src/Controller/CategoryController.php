@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Category;
 use App\Entity\Product;
@@ -49,6 +50,21 @@ class CategoryController extends AbstractController
 
         return new JsonResponse($jsonCategory, Response::HTTP_CREATED, [], true);
     }
+
+    //update a category with specific information front the request
+    #[Route('/api/categories/{id}', name: 'app_category_edit', methods:['put'])]
+    public function editCategory(Category $currentCategory, Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    {
+        $category = $serializer->deserialize($request->getContent(), Category::class, 'json', [AbstractNormalize::OBJECT_TO_POPULATE => $currentCategory]);
+
+        $em->persist($category);
+        $em->flush();
+
+        //$jsonCategory = $serializer->serialize($category, 'json', ['groups' => 'getCategories']);
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
 
     //delete an existing category from the database
     #[Route('/api/categories/{id}', name: 'app_category_delete', methods:['delete'])]

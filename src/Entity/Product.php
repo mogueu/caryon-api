@@ -14,39 +14,39 @@ class Product
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[groups(["getProducts"])]
+    #[groups(["getProducts", "getEntries","getSuppliers"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 5)]
-    #[groups(["getProducts"])]
+    #[groups(["getProducts", "getEntries","getSuppliers"])]
     private ?string $code = null;
 
     #[ORM\Column(length: 255)]
-    #[groups(["getProducts"])]
+    #[groups(["getProducts", "getEntries","getSuppliers"])]
     private ?string $name = null;
 
     #[ORM\Column(length: 100)]
-    #[groups(["getProducts"])]
+    #[groups(["getProducts", "getEntries","getSuppliers"])]
     private ?string $packaging = null;
 
     #[ORM\Column]
-    #[groups(["getProducts"])]
+    #[groups(["getProducts", "getEntries","getSuppliers"])]
     private ?int $price = null;
 
     #[ORM\Column]
-    #[groups(["getProducts"])]
+    #[groups(["getProducts", "getEntries","getSuppliers"])]
     private ?int $supplyTreshold = null;
 
     #[ORM\Column]
-    #[groups(["getProducts"])]
+    #[groups(["getProducts", "getEntries","getSuppliers"])]
     private ?int $quantity = null;
 
     #[ORM\ManyToOne(inversedBy: 'products')]
-    #[groups(["getProducts"])]
+    #[groups(["getProducts","getSuppliers"])]
     private ?Brand $brand = null;
 
     #[ORM\ManyToOne(inversedBy: 'products')]
-    #[groups(["getProducts"])]
+    #[groups(["getProducts","getSuppliers"])]
     private ?Category $category = null;
 
     #[ORM\ManyToMany(targetEntity: Supplier::class, mappedBy: 'products')]

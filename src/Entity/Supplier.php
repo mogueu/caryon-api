@@ -14,21 +14,27 @@ class Supplier
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[groups(["getSuppliers","getEntries","getProducts"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[groups(["getSuppliers","getEntries","getProducts"])]
     private ?string $company = null;
 
     #[ORM\Column(length: 255)]
+    #[groups(["getSuppliers","getEntries","getProducts"])]
     private ?string $representative = null;
 
     #[ORM\Column(nullable: true)]
+    #[groups(["getSuppliers","getEntries","getProducts"])]
     private ?int $contact = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[groups(["getSuppliers","getEntries","getProducts"])]
     private ?string $location = null;
 
     #[ORM\ManyToMany(targetEntity: Product::class, inversedBy: 'suppliers')]
+    #[groups(["getSuppliers"])]
     private Collection $products;
 
     #[ORM\OneToMany(mappedBy: 'supplier', targetEntity: Entry::class)]

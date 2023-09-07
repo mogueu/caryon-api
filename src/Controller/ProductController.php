@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Product;
 use App\Entity\Brand;
@@ -43,12 +44,11 @@ class ProductController extends AbstractController
     public function addProduct(Request $request, EntityManagerInterface $em, SerializerInterface $serializer, BrandRepository $brandRepository, CategoryRepository $categoryRepository): JsonResponse
     {
         $product = $serializer->deserialize($request->getContent(), Product::class, 'json');
-
         
         // get data as table
         $content = $request->toArray();
 
-        // Récupération de l'idAuthor. S'il n'est pas défini, alors on met -1 par défaut.
+        // get ids
         $idCategory = $content['categoryId'] ?? -1;
         $idBrand = $content['brandId'] ?? -1;
 
@@ -68,15 +68,15 @@ class ProductController extends AbstractController
 
     // update a product with specific information front the request
     #[Route('/api/products/{id}', name: 'app_product_edit', methods:['put'])]
-    public function editProduct(Request $request, EntityManagerInterface $em, SerializerInterface $serializer, BrandRepository $brandRepository, CategoryRepository $categoryRepository): JsonResponse
+    public function editProduct(Product $currentProduct, Request $request, EntityManagerInterface $em, SerializerInterface $serializer, BrandRepository $brandRepository, CategoryRepository $categoryRepository): JsonResponse
     {
-        $product = $serializer->deserialize($request->getContent(), Product::class, 'json');
+        $product = $serializer->deserialize($request->getContent(), Product::class, 'json', [AbstractNormalize::OBJECT_TO_POPULATE => $currentProduct]);
 
         
         // get data as table
         $content = $request->toArray();
 
-        // Récupération de l'idAuthor. S'il n'est pas défini, alors on met -1 par défaut.
+        // get ids
         $idCategory = $content['categoryId'] ?? -1;
         $idBrand = $content['brandId'] ?? -1;
 
@@ -89,9 +89,9 @@ class ProductController extends AbstractController
         $em->persist($product);
         $em->flush();
 
-        $jsonProduct = $serializer->serialize($product, 'json', ['groups' => 'getProducts']);
+        //$jsonProduct = $serializer->serialize($product, 'json', ['groups' => 'getProducts']);
 
-        return new JsonResponse($jsonProduct, Response::HTTP_CREATED, [], true);
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
     //delete an existing product from the database

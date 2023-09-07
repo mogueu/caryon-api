@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\EntryRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: EntryRepository::class)]
 class Entry
@@ -12,26 +13,38 @@ class Entry
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[groups(["getEntries"])]
     private ?int $id = null;
 
     #[ORM\Column]
+    #[groups(["getEntries"])]
     private ?int $quantity = null;
 
     #[ORM\Column]
+    #[groups(["getEntries"])]
     private ?int $amount = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[groups(["getEntries"])]
     private ?\DateTimeInterface $created = null;
 
     #[ORM\ManyToOne(inversedBy: 'entries')]
     #[ORM\JoinColumn(nullable: false)]
+    #[groups(["getEntries"])]
     private ?Product $product = null;
 
     #[ORM\ManyToOne(inversedBy: 'entries')]
+    #[groups(["getEntries"])]
     private ?Supplier $supplier = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[groups(["getEntries"])]
     private ?string $note = null;
+
+    public function __construct()
+    {
+        $this->created = new \DateTime('now');
+    }
 
     public function getId(): ?int
     {

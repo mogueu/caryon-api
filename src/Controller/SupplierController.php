@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Supplier;
 use App\Entity\Product;
@@ -21,7 +22,7 @@ class SupplierController extends AbstractController
     public function index(SupplierRepository $supplierRepository, SerializerInterface $serializer): JsonResponse
     {
         $suppliers = $supplierRepository->findAll();
-        $jsonSuppliers = $serializer->serialize($suppliers, 'json');
+        $jsonSuppliers = $serializer->serialize($suppliers, 'json', ['groups' => 'getProducts']);
         return new JsonResponse($jsonSuppliers, Response::HTTP_OK, [], true);
     }
 
@@ -30,7 +31,7 @@ class SupplierController extends AbstractController
     #[Route('/api/suppliers/{id}', name: 'app_supplier_detail', methods:['get'])]
     public function getBrand(Supplier $supplier, SupplierRepository $SupplierRepository, SerializerInterface $serializer): JsonResponse
     {
-        $jsonSupplier = $serializer->serialize($supplier, 'json');
+        $jsonSupplier = $serializer->serialize($supplier, 'json', ['groups' => 'getProducts']);
         return new JsonResponse($jsonSupplier, Response::HTTP_OK, [], true);
     }
 
@@ -42,9 +43,22 @@ class SupplierController extends AbstractController
         $em->persist($supplier);
         $em->flush();
 
-        $jsonSupplier = $serializer->serialize($supplier, 'json'/*, ['groups' => 'getProducts']*/);
+        $jsonSupplier = $serializer->serialize($supplier, 'json', ['groups' => 'getProducts']);
 
         return new JsonResponse($jsonSupplier, Response::HTTP_CREATED, [], true);
+    }
+
+    //update a supplier with specific information front the request
+    #[Route('/api/suppliers/{id}', name: 'app_supplier_edit', methods:['put'])]
+    public function editSupplier(Supplier $currentSupplier, Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    {
+        $supplier = $serializer->deserialize($request->getContent(), Supplier::class, 'json', [AbstractNormalize::OBJECT_TO_POPULATE => $currentSupplier]);
+        $em->persist($supplier);
+        $em->flush();
+
+        //$jsonSupplier = $serializer->serialize($supplier, 'json'/*, ['groups' => 'getProducts']*/);
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
     //delete an existing supplier from the database

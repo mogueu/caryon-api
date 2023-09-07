@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Expense;
 use App\Repository\ExpenseRepository;
@@ -32,17 +33,32 @@ class ExpenseController extends AbstractController
         return new JsonResponse($jsonExpense, Response::HTTP_OK, [], true);
     }
 
-    //create a new expense with specific information from the request
+    //create an expense with specific information from the request
     #[Route('/api/expenses', name: 'app_expense_add', methods:['post'])]
     public function addExpense(Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
     {
         $expense = $serializer->deserialize($request->getContent(), Expense::class, 'json');
+        //set the created field
+        $expense->setCreated(new \DateTime('now'));
         $em->persist($expense);
         $em->flush();
 
         $jsonExpense = $serializer->serialize($expense, 'json'/*, ['groups' => 'getProducts']*/);
 
         return new JsonResponse($jsonExpense, Response::HTTP_CREATED, [], true);
+    }
+
+    //edit an expense with specific information from the request
+    #[Route('/api/expenses/{id}', name: 'app_expense_edit', methods:['put'])]
+    public function editExpense(Expense $currentExpense, Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    {
+        $expense = $serializer->deserialize($request->getContent(), Expense::class, 'json', [AbstractNormalize::OBJECT_TO_POPULATE => $currentExpense]);
+        $em->persist($expense);
+        $em->flush();
+
+        //$jsonExpense = $serializer->serialize($expense, 'json'/*, ['groups' => 'getProducts']*/);
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
     //delete an existing expense from the database
