@@ -14,39 +14,39 @@ class Product
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[groups(["getProducts", "getEntries","getSuppliers"])]
+    #[groups(["getProducts", "getEntries","getSuppliers","getItems"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 5)]
-    #[groups(["getProducts", "getEntries","getSuppliers"])]
+    #[groups(["getProducts", "getEntries","getSuppliers","getItems"])]
     private ?string $code = null;
 
     #[ORM\Column(length: 255)]
-    #[groups(["getProducts", "getEntries","getSuppliers"])]
+    #[groups(["getProducts", "getEntries","getSuppliers","getItems"])]
     private ?string $name = null;
 
     #[ORM\Column(length: 100)]
-    #[groups(["getProducts", "getEntries","getSuppliers"])]
+    #[groups(["getProducts", "getEntries","getSuppliers","getItems"])]
     private ?string $packaging = null;
 
     #[ORM\Column]
-    #[groups(["getProducts", "getEntries","getSuppliers"])]
+    #[groups(["getProducts", "getEntries","getSuppliers","getItems"])]
     private ?int $price = null;
 
     #[ORM\Column]
-    #[groups(["getProducts", "getEntries","getSuppliers"])]
+    #[groups(["getProducts", "getEntries","getSuppliers","getItems"])]
     private ?int $supplyTreshold = null;
 
     #[ORM\Column]
-    #[groups(["getProducts", "getEntries","getSuppliers"])]
+    #[groups(["getProducts", "getEntries","getSuppliers","getItems"])]
     private ?int $quantity = null;
 
     #[ORM\ManyToOne(inversedBy: 'products')]
-    #[groups(["getProducts","getSuppliers"])]
+    #[groups(["getProducts","getSuppliers","getItems"])]
     private ?Brand $brand = null;
 
     #[ORM\ManyToOne(inversedBy: 'products')]
-    #[groups(["getProducts","getSuppliers"])]
+    #[groups(["getProducts","getSuppliers","getItems"])]
     private ?Category $category = null;
 
     #[ORM\ManyToMany(targetEntity: Supplier::class, mappedBy: 'products')]
@@ -59,6 +59,9 @@ class Product
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $image = null;
 
+    #[ORM\OneToMany(mappedBy: 'product', targetEntity: Item::class, orphanRemoval: true)]
+    private Collection $items;
+
     public function __construct()
     {
         $this->price = 0;
@@ -66,6 +69,7 @@ class Product
         $this->quantity = 0;
         $this->suppliers = new ArrayCollection();
         $this->entries = new ArrayCollection();
+        $this->items = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -234,6 +238,36 @@ class Product
     public function setImage(?string $image): static
     {
         $this->image = $image;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Item>
+     */
+    public function getItems(): Collection
+    {
+        return $this->items;
+    }
+
+    public function addItem(Item $item): static
+    {
+        if (!$this->items->contains($item)) {
+            $this->items->add($item);
+            $item->setProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removeItem(Item $item): static
+    {
+        if ($this->items->removeElement($item)) {
+            // set the owning side to null (unless already changed)
+            if ($item->getProduct() === $this) {
+                $item->setProduct(null);
+            }
+        }
 
         return $this;
     }

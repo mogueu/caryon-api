@@ -34,7 +34,7 @@ class Supplier
     private ?string $location = null;
 
     #[ORM\ManyToMany(targetEntity: Product::class, inversedBy: 'suppliers')]
-    #[groups(["getSuppliers"])]
+    #[groups(["getSuppliers","getEntries"])]
     private Collection $products;
 
     #[ORM\OneToMany(mappedBy: 'supplier', targetEntity: Entry::class)]

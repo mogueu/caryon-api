@@ -3,8 +3,13 @@
 namespace App\Entity;
 
 use App\Repository\OrderRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: OrderRepository::class)]
 #[ORM\Table(name: '`order`')]
@@ -13,40 +18,60 @@ class Order
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[groups(["getOrders","getItems"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 10)]
+    #[groups(["getOrders","getItems"])]
     private ?string $orderNumber = null;
 
     #[ORM\Column(length: 255)]
+    #[groups(["getOrders","getItems"])]
     private ?string $customerName = null;
 
     #[ORM\Column(nullable: true)]
+    #[groups(["getOrders","getItems"])]
     private ?int $customerContact = null;
 
     #[ORM\Column]
+    #[groups(["getOrders","getItems"])]
     private ?float $subAmount = null;
 
     #[ORM\Column]
+    #[groups(["getOrders","getItems"])]
     private ?float $discount = null;
 
     #[ORM\Column]
+    #[groups(["getOrders","getItems"])]
     private ?float $orderCost = null;
 
     #[ORM\Column]
+    #[groups(["getOrders","getItems"])]
     private ?float $paid = null;
 
     #[ORM\Column]
+    #[groups(["getOrders","getItems"])]
     private ?float $dueAmount = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[groups(["getOrders","getItems"])]
     private ?string $orderStatus = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[groups(["getOrders","getItems"])]
     private ?string $paymentType = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[groups(["getOrders","getItems"])]
     private ?\DateTimeInterface $created = null;
+
+    #[ORM\OneToMany(mappedBy: 'Invoice', targetEntity: Item::class, orphanRemoval: true)]
+    private Collection $items;
+
+    public function __construct()
+    {
+        $this->items = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -181,6 +206,36 @@ class Order
     public function setCreated(\DateTimeInterface $created): static
     {
         $this->created = $created;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Item>
+     */
+    public function getItems(): Collection
+    {
+        return $this->items;
+    }
+
+    public function addItem(Item $item): static
+    {
+        if (!$this->items->contains($item)) {
+            $this->items->add($item);
+            $item->setInvoice($this);
+        }
+
+        return $this;
+    }
+
+    public function removeItem(Item $item): static
+    {
+        if ($this->items->removeElement($item)) {
+            // set the owning side to null (unless already changed)
+            if ($item->getInvoice() === $this) {
+                $item->setInvoice(null);
+            }
+        }
 
         return $this;
     }
