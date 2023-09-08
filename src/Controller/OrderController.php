@@ -10,6 +10,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Entity\Order;
 use App\Entity\Product;
 use App\Entity\Item;
@@ -38,9 +39,16 @@ class OrderController extends AbstractController
 
     //add an order
     #[Route('/api/orders', name: 'app_order_add', methods: ['post'])]
-    public function addOrder(Request $request, EntityManagerInterface $em, SerializerInterface $serializer, ItemRepository $itemRepository, ): JsonResponse
+    public function addOrder(Request $request, EntityManagerInterface $em, SerializerInterface $serializer, ItemRepository $itemRepository, ValidatorInterface $validator): JsonResponse
     {
         $order = $serializer->deserialize($request->getContent(), Order::class, 'json');
+
+        // test errors
+        $errors = $validator->validate($order);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
 
         $em->persist($order);
         $em->flush();
@@ -52,9 +60,16 @@ class OrderController extends AbstractController
 
     //edit an order
     #[Route('/api/orders/{id}', name: 'app_order_edit', methods: ['put'])]
-    public function editOrder(Order $currentOrder, Request $request, EntityManagerInterface $em, SerializerInterface $serializer, ItemRepository $itemRepository, ): JsonResponse
+    public function editOrder(Order $currentOrder, Request $request, EntityManagerInterface $em, SerializerInterface $serializer, ItemRepository $itemRepository, ValidatorInterface $validator): JsonResponse
     {
         $order = $serializer->deserialize($request->getContent(), Order::class, 'json', [AbstractNormalize::OBJECT_TO_POPULATE => $currentOrder]);
+
+        // test errors
+        $errors = $validator->validate($order);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
         
         $em->persist($order);
         $em->flush();

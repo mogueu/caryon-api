@@ -10,6 +10,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Entity\Brand;
 use App\Entity\Product;
 use App\Repository\BrandRepository;
@@ -37,9 +38,17 @@ class BrandController extends AbstractController
 
     //create a new brand with specific information front the request
     #[Route('/api/brands', name: 'app_brand_add', methods:['post'])]
-    public function addBrand(Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    public function addBrand(Request $request, EntityManagerInterface $em, SerializerInterface $serializer, ValidatorInterface $validator): JsonResponse
     {
         $brand = $serializer->deserialize($request->getContent(), brand::class, 'json');
+
+        // test errors
+        $errors = $validator->validate($brand);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
+
         //set the created field
         $brand->setCreated(new \DateTime('now'));
 
@@ -53,9 +62,16 @@ class BrandController extends AbstractController
 
     //update a brand with specific information front the request
     #[Route('/api/brands/{id}', name: 'app_brand_edit', methods:['put'])]
-    public function editBrand(Brand $currentBrand, Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    public function editBrand(Brand $currentBrand, Request $request, EntityManagerInterface $em, SerializerInterface $serializer, ValidatorInterface $validator): JsonResponse
     {
         $brand = $serializer->deserialize($request->getContent(), brand::class, 'json', [AbstractNormalize::OBJECT_TO_POPULATE => $currentBrand]);
+
+        // test errors
+        $errors = $validator->validate($brand);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
 
         $em->persist($brand);
         $em->flush();

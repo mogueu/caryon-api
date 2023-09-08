@@ -10,6 +10,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Entity\Supplier;
 use App\Entity\Product;
 use App\Repository\SupplierRepository;
@@ -37,9 +38,17 @@ class SupplierController extends AbstractController
 
     //create a new supplier with specific information front the request
     #[Route('/api/suppliers', name: 'app_supplier_add', methods:['post'])]
-    public function addSupplier(Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    public function addSupplier(Request $request, EntityManagerInterface $em, SerializerInterface $serializer, ValidatorInterface $validator): JsonResponse
     {
         $supplier = $serializer->deserialize($request->getContent(), Supplier::class, 'json');
+
+        // test errors
+        $errors = $validator->validate($supplier);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
+
         $em->persist($supplier);
         $em->flush();
 
@@ -50,9 +59,17 @@ class SupplierController extends AbstractController
 
     //update a supplier with specific information front the request
     #[Route('/api/suppliers/{id}', name: 'app_supplier_edit', methods:['put'])]
-    public function editSupplier(Supplier $currentSupplier, Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    public function editSupplier(Supplier $currentSupplier, Request $request, EntityManagerInterface $em, SerializerInterface $serializer, ValidatorInterface $validator): JsonResponse
     {
         $supplier = $serializer->deserialize($request->getContent(), Supplier::class, 'json', [AbstractNormalize::OBJECT_TO_POPULATE => $currentSupplier]);
+
+        // test errors
+        $errors = $validator->validate($supplier);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
+
         $em->persist($supplier);
         $em->flush();
 

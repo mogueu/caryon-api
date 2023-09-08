@@ -2,26 +2,35 @@
 
 namespace App\DataFixtures;
 
-use App\Entity\Brand;
-use App\Entity\Category;
-use App\Entity\Supplier;
+use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppFixtures extends Fixture
 {
+    private $userPasswordHasher;
+    
+    public function __construct(UserPasswordHasherInterface $userPasswordHasher)
+    {
+        $this->userPasswordHasher = $userPasswordHasher;
+    }
+    
     public function load(ObjectManager $manager): void
     {
-        // create a set of 10 suppliers
-        for ($i = 0; $i < 10; $i++) {
-            $supplier = new Supplier();
-            $supplier->setCompany('category ' . $i);
-            $supplier->setRepresentative('respresentative' . $i);
-            $supplier->setContact('000000000');
-            $supplier->setLocation('location' . $i);
-            $manager->persist($supplier);
-        }
-
+        // Création d'un user "normal"
+        $user = new User();
+        $user->setUsername("CAISSE 1");
+        $user->setRoles(["ROLE_USER"]);
+        $user->setPassword($this->userPasswordHasher->hashPassword($user, "password"));
+        $manager->persist($user);
+        
+        // Création d'un user admin
+        $userAdmin = new User();
+        $userAdmin->setUsername("ADMIN");
+        $userAdmin->setRoles(["ROLE_ADMIN"]);
+        $userAdmin->setPassword($this->userPasswordHasher->hashPassword($userAdmin, "password"));
+        $manager->persist($userAdmin);
 
         $manager->flush();
     }

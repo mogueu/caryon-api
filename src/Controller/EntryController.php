@@ -10,6 +10,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Entity\Entry;
 use App\Entity\Product;
 use App\Entity\Supplier;
@@ -39,9 +40,16 @@ class EntryController extends AbstractController
 
     // add new entry to the database
     #[Route('/api/entries', name: 'app_entry_add', methods: ['post'])]
-    public function addEntry(Request $request, EntityManagerInterface $em, SerializerInterface $serializer, SupplierRepository $supplierRepository, ProductRepository $productRepository): JsonResponse
+    public function addEntry(Request $request, EntityManagerInterface $em, SerializerInterface $serializer, SupplierRepository $supplierRepository, ProductRepository $productRepository,ValidatorInterface $validator ): JsonResponse
     {
         $entry = $serializer->deserialize($request->getContent(), Entry::class, 'json');
+
+        // test errors
+        $errors = $validator->validate($entry);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
         
         // get data as table
         $content = $request->toArray();
@@ -65,9 +73,16 @@ class EntryController extends AbstractController
     // update an entry
     //param converter is used to convert data
     #[Route('/api/entries/{id}', name: 'app_entry_edit', methods: ['put'])]
-    public function editEntry(Entry $currentEntry, Request $request, EntityManagerInterface $em, SerializerInterface $serializer, SupplierRepository $supplierRepository, ProductRepository $productRepository): JsonResponse
+    public function editEntry(Entry $currentEntry, Request $request, EntityManagerInterface $em, SerializerInterface $serializer, SupplierRepository $supplierRepository, ProductRepository $productRepository, ValidatorInterface $validator): JsonResponse
     {
         $entry = $serializer->deserialize($request->getContent(), Entry::class, 'json', [AbstractNormalize::OBJECT_TO_POPULATE => $currentEntry]);
+
+        // test errors
+        $errors = $validator->validate($entry);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
         
         // get data as table
         $content = $request->toArray();

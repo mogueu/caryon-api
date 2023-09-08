@@ -10,6 +10,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Entity\Product;
 use App\Entity\Brand;
 use App\Entity\Category;
@@ -41,9 +42,16 @@ class ProductController extends AbstractController
 
     //create a new product with specific information front the request
     #[Route('/api/products', name: 'app_product_add', methods:['post'])]
-    public function addProduct(Request $request, EntityManagerInterface $em, SerializerInterface $serializer, BrandRepository $brandRepository, CategoryRepository $categoryRepository): JsonResponse
+    public function addProduct(Request $request, EntityManagerInterface $em, SerializerInterface $serializer, BrandRepository $brandRepository, CategoryRepository $categoryRepository, ValidatorInterface $validator): JsonResponse
     {
         $product = $serializer->deserialize($request->getContent(), Product::class, 'json');
+
+        // test errors
+        $errors = $validator->validate($product);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
         
         // get data as table
         $content = $request->toArray();
@@ -68,10 +76,16 @@ class ProductController extends AbstractController
 
     // update a product with specific information front the request
     #[Route('/api/products/{id}', name: 'app_product_edit', methods:['put'])]
-    public function editProduct(Product $currentProduct, Request $request, EntityManagerInterface $em, SerializerInterface $serializer, BrandRepository $brandRepository, CategoryRepository $categoryRepository): JsonResponse
+    public function editProduct(Product $currentProduct, Request $request, EntityManagerInterface $em, SerializerInterface $serializer, BrandRepository $brandRepository, CategoryRepository $categoryRepository, ValidatorInterface $validator): JsonResponse
     {
         $product = $serializer->deserialize($request->getContent(), Product::class, 'json', [AbstractNormalize::OBJECT_TO_POPULATE => $currentProduct]);
 
+        // test errors
+        $errors = $validator->validate($product);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
         
         // get data as table
         $content = $request->toArray();

@@ -10,6 +10,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Entity\Expense;
 use App\Repository\ExpenseRepository;
 
@@ -35,9 +36,17 @@ class ExpenseController extends AbstractController
 
     //create an expense with specific information from the request
     #[Route('/api/expenses', name: 'app_expense_add', methods:['post'])]
-    public function addExpense(Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    public function addExpense(Request $request, EntityManagerInterface $em, SerializerInterface $serializer, ValidatorInterface $validator): JsonResponse
     {
         $expense = $serializer->deserialize($request->getContent(), Expense::class, 'json');
+
+        // test errors
+        $errors = $validator->validate($expense);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
+
         //set the created field
         $expense->setCreated(new \DateTime('now'));
         $em->persist($expense);
@@ -50,9 +59,17 @@ class ExpenseController extends AbstractController
 
     //edit an expense with specific information from the request
     #[Route('/api/expenses/{id}', name: 'app_expense_edit', methods:['put'])]
-    public function editExpense(Expense $currentExpense, Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    public function editExpense(Expense $currentExpense, Request $request, EntityManagerInterface $em, SerializerInterface $serializer, ValidatorInterface $validator): JsonResponse
     {
         $expense = $serializer->deserialize($request->getContent(), Expense::class, 'json', [AbstractNormalize::OBJECT_TO_POPULATE => $currentExpense]);
+
+        // test errors
+        $errors = $validator->validate($expense);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
+
         $em->persist($expense);
         $em->flush();
 

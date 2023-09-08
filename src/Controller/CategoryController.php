@@ -10,6 +10,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Entity\Category;
 use App\Entity\Product;
 use App\Repository\CategoryRepository;
@@ -37,9 +38,17 @@ class CategoryController extends AbstractController
 
     //create a new category with specific information front the request
     #[Route('/api/categories', name: 'app_category_add', methods:['post'])]
-    public function addCategory(Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    public function addCategory(Request $request, EntityManagerInterface $em, SerializerInterface $serializer, ValidatorInterface $validator): JsonResponse
     {
         $category = $serializer->deserialize($request->getContent(), Category::class, 'json');
+
+        // test errors
+        $errors = $validator->validate($category);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
+
         //set the created field
         $category->setCreated(new \DateTime('now'));
 
@@ -53,9 +62,16 @@ class CategoryController extends AbstractController
 
     //update a category with specific information front the request
     #[Route('/api/categories/{id}', name: 'app_category_edit', methods:['put'])]
-    public function editCategory(Category $currentCategory, Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    public function editCategory(Category $currentCategory, Request $request, EntityManagerInterface $em, SerializerInterface $serializer, ValidatorInterface $validator): JsonResponse
     {
         $category = $serializer->deserialize($request->getContent(), Category::class, 'json', [AbstractNormalize::OBJECT_TO_POPULATE => $currentCategory]);
+
+        // test errors
+        $errors = $validator->validate($category);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
 
         $em->persist($category);
         $em->flush();
